@@ -19,21 +19,21 @@ vehicleWidth = 1.5
 vehicleLength = 2.0
 
 # change to unique MAC address of bluetooth controller
-controllerMAC = "DD:44:63:38:84:07" 
+controllerMAC = "E4:17:D8:9A:F7:7B" 
 
 # create an object for the bluetooth control
-controller = bt.PG9038S("/dev/input/event1")
+controller = bt.PG9038S("/dev/input/event0")
 
 # create an object for the serial port controlling the curtis units
 try:
-    curtisData = serial.Serial("/dev/ttyUSB0", 115200, timeout=1)
+    curtisData = serial.Serial("/dev/ttyUSB1", 115200, timeout=1)
 except:
     print("Curtis-Serial Bridge Failed to connect")
     pass
 
 # create an object for the serial port controlling the curtis units
 try:
-    actData = serial.Serial("/dev/ttyUSB1", 115200, timeout=1)
+    actData = serial.Serial("/dev/ttyUSB0", 115200, timeout=1)
 except:
     print("Actuator Controller Failed to connect")
     pass
@@ -44,13 +44,13 @@ direction = False
 # Initialise  values for enable and estop
 estopState = False
 enable = False
-left_y = 128
-right_x = 128
+left_y = 32768
+right_x = 32768
 toolPos = 128
 
-# curtisMessage = []  # Seems to be necessary to have a placeholder for the message here
-# actMessage = []
-# last_message = []
+curtisMessage = []  # Seems to be necessary to have a placeholder for the message here
+actMessage = []
+last_message = []
 
 ## Functions -----------------------------------------------------------------------
 
@@ -71,8 +71,8 @@ def generateCurtisMessage(estopState, enable, v1, v2, v3, v4):
     # # # Velocities are scaled from -100 to +100 with 0 (middle of joystick) = no movement
     # # # If vel >= 0 = forward, if vel < 0 backward
     vels = [v1, v2, v3, v4]
-    dirs = []
-    for i in vels:
+    dirs = [None, None, None, None]
+    for i in range(len(vels)):
         if vels[i] >= 0:
             dirs[i] = False
         elif vels[i] < 0:
@@ -185,13 +185,13 @@ def isEnabled():
 def calculateVelocities(velocity, angle):
     # Appl Sci 2017, 7, 74
     if angle <= 0: #turn Left
-        R = L/math.tan(angle)
+        R = vehicleLength/math.tan(angle)
         v1 = velocity*(1-(vehicleWidth/R))
         v2 = velocity*(1+(vehicleWidth/R))
         v3 = velocity*((R-(vehicleWidth/2)/R))
         v4 = velocity*((R+(vehicleWidth/2)/R))
     elif angle >= 0: #turn Right
-        R = L/math.tan(angle)
+        R = vehicleLength/math.tan(angle)
         v1 = velocity*(1+(vehicleWidth/R))
         v2 = velocity*(1-(vehicleWidth/R))
         v3 = velocity*((R+(vehicleWidth/2)/R))
@@ -227,13 +227,13 @@ while True:
     # Check the enable state via the function
     if isEnabled: 
         # Calculate the final inputs rescaling the absolute value to between -100 and 100
-        commandVel = rescale(newStates["left_y"], 255,0,-100,100)
-        commandAngle = rescale(newStates["right_x"], 255,0,-100,100)
+        commandVel = rescale(newStates["left_y"], 65535,0,-100,100)
+        commandAngle = rescale(newStates["right_x"], 0, 65535,-100,100)
         v1, v2, v3, v4 = calculateVelocities(commandVel, commandAngle)
 
     else:
         commandVel = 0
-        commandAngle = rescale(newStates["right_x"], 255,0,-100,100)
+        commandAngle = rescale(newStates["right_x"], 0, 65535,-100,100)
         v1, v2, v3, v4 = calculateVelocities(commandAngle, 0)
 
     # Build a new message with the correct sequence for the curtis Arduino

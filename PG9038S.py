@@ -25,7 +25,7 @@ class PG9038S():
             #ev code for analogue ctrls
             self.left_x = 0
             self.left_y = 1
-            self.right_x = 2
+            self.right_x = 3
             self.right_y = 5
 
             self.states = {"left_x":128
