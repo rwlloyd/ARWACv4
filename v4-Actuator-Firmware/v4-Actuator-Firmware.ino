@@ -224,4 +224,8 @@ void processSerialCommand() {
   }
   //Serial.write(13);
   commandReceived = false;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 6b5818f510db5cee2794cdd791b25341d2e3b903
