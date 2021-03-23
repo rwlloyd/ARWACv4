@@ -2,7 +2,7 @@
 import serial
 import math
 from time import sleep
-import PG9038S as bt
+import eightbitdo as bt
 import subprocess as sp
 
 print("    4 Wheel Drive Remote Control for Serial-Curtis Bridge v1.3 and Generic Bluetooth Controller")
@@ -217,9 +217,9 @@ while True:
     except IOError:
         pass
 
-    if newStates["dpad_y"] > 129:
+    if newStates["dpad_y"] == -1:
         toolPos += 1
-    elif newStates["dpad_y"] < 127:
+    elif newStates["dpad_y"] == 1:
         toolPos -= 1
     # Rescal the tool position. 100 is full up, 0 is full down. #'###CHECK THIS    
     commandTool = rescale(toolPos, 255, 0, 100, 0)
