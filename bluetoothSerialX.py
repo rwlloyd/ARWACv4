@@ -1,4 +1,16 @@
 #!/usr/bin/env python3
+
+"""
+Current status
+
+steering - working
+tool - working but inverted
+wheels - massive numbers are soon as you touch the stick
+enable - doesn't seem to work yet
+"""
+
+
+
 import serial
 import math
 from time import sleep
@@ -95,13 +107,13 @@ def generateCurtisMessage(estopState, enable, v1, v2, v3, v4):
     messageToSend.append(int(estopState))
     messageToSend.append(int(enable))
     messageToSend.append(int(dirs[0]))
-    messageToSend.append(abs(int(vels[0])))
+    messageToSend.append(abs(int(rescale(vels[0], -1, 1, -10, 10))))
     messageToSend.append(int(dirs[1]))
-    messageToSend.append(abs(int(vels[1])))
+    messageToSend.append(abs(int(rescale(vels[1], -1, 1, -10, 10))))
     messageToSend.append(int(dirs[2]))
-    messageToSend.append(abs(int(vels[2])))
+    messageToSend.append(abs(int(rescale(vels[2], -1, 1, -10, 10))))
     messageToSend.append(int(dirs[3]))
-    messageToSend.append(abs(int(vels[3])))
+    messageToSend.append(abs(int(rescale(vels[3], -1, 1, -10, 10))))
     
     print("Sending: %s" % str(messageToSend))
     return messageToSend
@@ -114,8 +126,8 @@ def generateActMessage(enable, angle, height):
     messageToSend = []
     messageToSend.append(int(estopState))
     messageToSend.append(int(enable))
-    messageToSend.append(int(height))
     messageToSend.append(int(angle))
+    messageToSend.append(int(height))
     
     print("Sending: %s" % str(messageToSend))
     return messageToSend
@@ -163,7 +175,7 @@ def isEnabled():
     Function to handle enable and estop states. it was geeting annoying to look at.
     """
     # to reset after estop left and right bumper buttons - press together to cancel estop
-    if newStates["trigger_l_1"] == 1 and newStates["trigger_r_1"] == 1:
+    if newStates["trigger_l_2"] == 1 and newStates["trigger_r_2"] == 1:
         estopState = False
 
     # left and right joystick buttons trigger estop
@@ -172,9 +184,9 @@ def isEnabled():
     
     if estopState == True:
         enable = False #ok
-
+    print(newStates["trigger_l_1"])
     # dead mans switch left or right trigger button
-    if newStates["trigger_l_2"] == 1 or newStates["trigger_r_2"] == 1:
+    if newStates["trigger_l_1"] == 1 or newStates["trigger_r_1"] == 1:
         if estopState == False:
             enable = True
     else:
@@ -190,12 +202,17 @@ def calculateVelocities(velocity, angle):
         v2 = velocity*(1+(vehicleWidth/R))
         v3 = velocity*((R-(vehicleWidth/2)/R))
         v4 = velocity*((R+(vehicleWidth/2)/R))
-    elif angle >= 0: #turn Right
+    elif angle > 0: #turn Right
         R = vehicleLength/math.tan(angle)
         v1 = velocity*(1+(vehicleWidth/R))
         v2 = velocity*(1-(vehicleWidth/R))
         v3 = velocity*((R+(vehicleWidth/2)/R))
         v4 = velocity*((R-(vehicleWidth/2)/R))
+    elif angle == 0:
+        v1 = velocity
+        v2 = velocity
+        v3 = velocity
+        v4 = velocity
 
     return v1, v2, v3, v4
 
@@ -223,9 +240,9 @@ while True:
         pass
 
     if newStates["dpad_y"] == -1:
-        toolPos += 1
+        toolPos += 10
     elif newStates["dpad_y"] == 1:
-        toolPos -= 1
+        toolPos -= 10
     # Rescal the tool position. 100 is full up, 0 is full down. #'###CHECK THIS    
     commandTool = rescale(toolPos, 255, 0, 100, 0)
     
@@ -235,10 +252,11 @@ while True:
         commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)
         commandAngle = rescale(newStates["right_x"], 0, 65535, 0, 255)
         # the angle needs to be in relatively real numbers
-        cmdAng = rescale(commandAngle, -1, 1, 0, 255)
-        print(cmdAng)
-        v1, v2, v3, v4 = calculateVelocities(commandVel, cmdAng)
-        #print(v1,v2,v3,v4)
+        cmdVel = rescale(commandVel, 0, 255, -1, 1)
+        cmdAng = rescale(commandAngle, 0, 255, -1, 1)
+        #print(cmdAng)
+        v1, v2, v3, v4 = calculateVelocities(cmdVel, cmdAng)
+        print(v1,v2,v3,v4)
 
     else:
         commandVel = 0
