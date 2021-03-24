@@ -184,7 +184,7 @@ def isEnabled():
 
 def calculateVelocities(velocity, angle):
     # Appl Sci 2017, 7, 74
-    if angle <= 0: #turn Left
+    if angle < 0: #turn Left
         R = vehicleLength/math.tan(angle)
         v1 = velocity*(1-(vehicleWidth/R))
         v2 = velocity*(1+(vehicleWidth/R))
@@ -198,6 +198,11 @@ def calculateVelocities(velocity, angle):
         v4 = velocity*((R-(vehicleWidth/2)/R))
 
     return v1, v2, v3, v4
+
+def limit(num, minimum=1, maximum=255):
+  """Limits input 'num' between minimum and maximum values.
+  Default minimum value is 1 and maximum value is 255."""
+  return max(min(num, maximum), minimum)
 
 # Main Loop
 while True:
@@ -227,19 +232,24 @@ while True:
     # Check the enable state via the function
     if isEnabled: 
         # Calculate the final inputs rescaling the absolute value to between -100 and 100
-        commandVel = rescale(newStates["left_y"], 65535,0,-1,1)
-        commandAngle = rescale(newStates["right_x"], 0, 65535,-1,1)
-        v1, v2, v3, v4 = calculateVelocities(commandVel, commandAngle)
-        print(v1,v2,v3,v4)
+        commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)
+        commandAngle = rescale(newStates["right_x"], 0, 65535, 0, 255)
+        # the angle needs to be in relatively real numbers
+        cmdAng = rescale(commandAngle, -1, 1, 0, 255)
+        print(cmdAng)
+        v1, v2, v3, v4 = calculateVelocities(commandVel, cmdAng)
+        #print(v1,v2,v3,v4)
 
     else:
         commandVel = 0
-        commandAngle = rescale(newStates["right_x"], 0, 65535,-100, 100)
-        v1, v2, v3, v4 = calculateVelocities(commandAngle, 0)
+        commandAngle = rescale(newStates["right_x"], 0, 65535,0, 255)
+        cmdAng = rescale(commandAngle, 0, 255, -1, 1)
+        v1, v2, v3, v4 = calculateVelocities(cmdAng, 0)
 
     # Build a new message with the correct sequence for the curtis Arduino
     newCurtisMessage = generateCurtisMessage(estopState, enable, v1, v2, v3, v4)
     # Build new message for the actuators
+    #print(enable, commandTool, commandAngle)
     newActMessage = generateActMessage(enable, commandTool, commandAngle)
     # Send the new message to the actuators and curtis arduinos
     send(newActMessage, 1)
