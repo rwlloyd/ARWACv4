@@ -12,14 +12,14 @@ class eightbitdo():
             self.x_btn = 307
             self.b_btn = 304
             self.a_btn = 305
-            self.right_tr_1 = 309 
+            self.right_tr_1 = 309
             self.left_tr_1 = 308
             self.sel_btn = 310
             self.start_btn = 311
             self.dpad_x = 16
             self.dpad_y = 17
             self.left_xy_btn = 312
-            self.right_xy_btn = 313                                   
+            self.right_xy_btn = 313
             #ev code for analogue ctrls
             self.left_x = 0
             self.left_y = 1
@@ -108,7 +108,7 @@ class eightbitdo():
         ,self.states["trigger_r_1"],self.states["trigger_r_2"],self.states["button_select"]
         ,self.states["button_start"],self.states["button_left_xy"],self.states["button_right_xy"])
 
-# mycontroller = eightbitdo()
-# while (True):
-#     mycontroller.readInputs()
-#     mycontroller.printStates()
+#mycontroller = eightbitdo()
+#while (True):
+#    mycontroller.readInputs()
+#    mycontroller.printStates()
