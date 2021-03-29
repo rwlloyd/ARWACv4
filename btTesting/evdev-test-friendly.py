@@ -9,7 +9,7 @@ def readInput():
     events = controller.read()
     try: 
         for event in events:
-            print(event.code)
+            print(event)
     except IOError:
         pass
     #return state

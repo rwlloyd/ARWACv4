@@ -3,10 +3,11 @@
 """
 Current status
 
-steering - working
-tool - working but inverted
-wheels - massive numbers are soon as you touch the stick
-enable - doesn't seem to work yet
+steering - working but shit.... everything's sloppy, actuator seems a bit weak. 
+tool - working but inverted - needs power connecting too
+wheels - fixed
+enable - doesn't seem to work yet, but everything is enabled.... fix this first!
+Connect ESTOP buttons
 """
 
 
@@ -25,7 +26,25 @@ print("    Usage: DPad up/down to raise/lower tool")
 print("    Usage: estop enable = either joystick buttons, cancel estop = both bumper buttons")
 print("     - Rob Lloyd. 02/2021")
 
+# change to unique MAC address of bluetooth controller
+controllerMAC = "E4:17:D8:9A:F7:7B" 
 
+# create an object for the bluetooth control
+controller = bt.eightbitdo("/dev/input/event0")
+
+# create an object for the serial port controlling the curtis units
+try:
+    curtisData = serial.Serial("/dev/ttyUSB1", 115200, timeout=1)
+except:
+    print("Curtis-Serial Bridge Failed to connect")
+    pass
+
+# create an object for the serial port controlling the curtis units
+try:
+    actData = serial.Serial("/dev/ttyUSB0", 115200, timeout=1)
+except:
+    print("Actuator Controller Failed to connect")
+    pass
 
 ## Functions -----------------------------------------------------------------------
 
@@ -35,7 +54,7 @@ def rescale(val, in_min, in_max, out_min, out_max):
     """
     return out_min + (val - in_min) * ((out_max - out_min) / (in_max - in_min))
 
-def generateCurtisMessage(estopState: bool, enable: bool, v1: int , v2: int, v3: int, v4: int):
+def generateCurtisMessage(estopState: bool, enable: bool, v1 , v2, v3, v4):
     """
     Accepts an input of two bools for estop and enable. 
     Then two velocities for right and left wheels between -100 and 100
@@ -46,7 +65,7 @@ def generateCurtisMessage(estopState: bool, enable: bool, v1: int , v2: int, v3:
     # # # Velocities are scaled from -100 to +100 with 0 (middle of joystick) = no movement
     # # # If vel >= 0 = forward, if vel < 0 backward
     vels = [v1, v2, v3, v4]
-    dirs = [None, None, None, None]
+    dirs = [False, False, False, False]
     for i in range(len(vels)):
         if vels[i] >= 0:
             dirs[i] = False
@@ -66,22 +85,21 @@ def generateCurtisMessage(estopState: bool, enable: bool, v1: int , v2: int, v3:
     # # 0  1
     # # 2  3
     # # Back (key end)
-
     messageToSend.append(int(estopState))
     messageToSend.append(int(enable))
     messageToSend.append(int(dirs[0]))
-    messageToSend.append(abs(int(rescale(vels[0], -1, 1, -10, 10))))
+    messageToSend.append(abs(int(vels[0])))
     messageToSend.append(int(dirs[1]))
-    messageToSend.append(abs(int(rescale(vels[1], -1, 1, -10, 10))))
+    messageToSend.append(abs(int(vels[1])))
     messageToSend.append(int(dirs[2]))
-    messageToSend.append(abs(int(rescale(vels[2], -1, 1, -10, 10))))
+    messageToSend.append(abs(int(vels[2])))
     messageToSend.append(int(dirs[3]))
-    messageToSend.append(abs(int(rescale(vels[3], -1, 1, -10, 10))))
+    messageToSend.append(abs(int(vels[3])))
     
     print("Sending: %s" % str(messageToSend))
     return messageToSend
 
-def generateActMessage(enable: bool, angle, height, estopState:bool):
+def generateActMessage(estopState:bool, enable: bool, height, angle):
     """
     Accepts an input of two ints between -100 and 100
     """
@@ -89,13 +107,37 @@ def generateActMessage(enable: bool, angle, height, estopState:bool):
     messageToSend = []
     messageToSend.append(int(estopState))
     messageToSend.append(int(enable))
-    messageToSend.append(int(angle))
     messageToSend.append(int(height))
+    messageToSend.append(int(angle))
     
     print("Sending: %s" % str(messageToSend))
     return messageToSend
 
-def send(message_in, conn, actData, curtisData):
+# def send(message_in, conn, actData, curtisData):
+#     """
+#     Function to send a message_in made of ints, convert them to bytes and then send them over a serial port
+#     message length, 10 bytes.
+#     """
+#     if conn == 0:
+#         messageLength = 10
+#         message = []
+#         for i in range(messageLength):
+#             try:
+#                 message.append(message_in[i].to_bytes(1, 'little'))
+#             except:
+#                 print(i, [j for j in message_in])
+#         for i in range(messageLength):
+#             curtisData.write(message[i])
+#     elif conn == 1:
+#         messageLength = 4
+#         message = []
+#         for i in range(messageLength):
+#             message.append(message_in[i].to_bytes(1, 'little'))
+#         for i in range(messageLength):
+#             actData.write(message[i])
+#     #print(message)
+
+def send(message_in, conn):
     """
     Function to send a message_in made of ints, convert them to bytes and then send them over a serial port
     message length, 10 bytes.
@@ -103,19 +145,16 @@ def send(message_in, conn, actData, curtisData):
     if conn == 0:
         messageLength = 10
         message = []
-        for i in range(messageLength):
-            try:
-                message.append(message_in[i].to_bytes(1, 'little'))
-            except:
-                print(i, [j for j in message_in])
-        for i in range(messageLength):
+        for i in range(0, messageLength):
+            message.append(message_in[i].to_bytes(1, 'little'))
+        for i in range(0, messageLength):
             curtisData.write(message[i])
     elif conn == 1:
         messageLength = 4
         message = []
-        for i in range(messageLength):
+        for i in range(0, messageLength):
             message.append(message_in[i].to_bytes(1, 'little'))
-        for i in range(messageLength):
+        for i in range(0, messageLength):
             actData.write(message[i])
     #print(message)
 
@@ -141,11 +180,11 @@ def isEnabled():
     Function to handle enable and estop states. it was geeting annoying to look at.
     """
     # to reset after estop left and right bumper buttons - press together to cancel estop
-    if newStates["trigger_l_2"] == 1 and newStates["trigger_r_2"] == 1:
+    if newStates["trigger_l_2"] == 1 and newStates["trigger_r_2"] == 0:
         estopState = False
 
     # left and right joystick buttons trigger estop
-    if newStates["button_left_xy"] == 1 or newStates["button_right_xy"] == 1:
+    if newStates["button_left_xy"] == 1 or newStates["button_right_xy"] == 0:
         estopState = True #this shouldnt reset. but it does
     
     if estopState == True:
@@ -160,31 +199,40 @@ def isEnabled():
 
     return enable
 
-def calculateVelocities(vehicleLength: float, vehicleWidth: float, velocity, angle):
-    # Appl Sci 2017, 7, 74
-    if angle > 0: #turn Left
-        R = vehicleLength/math.tan(angle)
-        v1 = velocity*(1-(vehicleWidth/R))
-        v2 = velocity*(1+(vehicleWidth/R))
-        v3 = velocity*((R-(vehicleWidth/2)/R))
-        v4 = velocity*((R+(vehicleWidth/2)/R))
-    elif angle < 0: #turn Right
-        R = vehicleLength/math.tan(angle)
-        v1 = velocity*(1+(vehicleWidth/R))
-        v2 = velocity*(1-(vehicleWidth/R))
-        v3 = velocity*((R+(vehicleWidth/2)/R))
-        v4 = velocity*((R-(vehicleWidth/2)/R))
-    elif angle < 0.001 and angle > -0.001:
-        angle = 0
-        v1 = velocity
-        v2 = velocity
-        v3 = velocity
-        v4 = velocity
+# def calculateVelocities(vehicleLength: float, vehicleWidth: float, velocity, angle):
+#     # Appl Sci 2017, 7, 74
+#     if angle > 0: #turn Left
+#         R = vehicleLength/math.tan(angle)
+#         v1 = velocity*(1-(vehicleWidth/R))
+#         v2 = velocity*(1+(vehicleWidth/R))
+#         v3 = velocity*((R-(vehicleWidth/2)/R))
+#         v4 = velocity*((R+(vehicleWidth/2)/R))
+#     elif angle < 0: #turn Right
+#         R = vehicleLength/math.tan(angle)
+#         v1 = velocity*(1+(vehicleWidth/R))
+#         v2 = velocity*(1-(vehicleWidth/R))
+#         v3 = velocity*((R+(vehicleWidth/2)/R))
+#         v4 = velocity*((R-(vehicleWidth/2)/R))
+#     elif angle < 0.001 and angle > -0.001:
+#         angle = 0
+#         v1 = velocity
+#         v2 = velocity
+#         v3 = velocity
+#         v4 = velocity
 
-    if sum([v1, v2, v3, v4]) < 4.00:
-        return v1, v2, v3, v4
-    else:
-        raise ValueError(f'Velocity value incorrect: {v1}, {v2}, {v3}, {v4} Angle {angle} Sum: {sum([v1, v2, v3, v4])}')
+#     if sum([v1, v2, v3, v4]) < 4.00:
+#         return v1, v2, v3, v4
+#     else:
+#         raise ValueError(f'Velocity value incorrect: {v1}, {v2}, {v3}, {v4} Angle {angle} Sum: {sum([v1, v2, v3, v4])}')
+
+def calculateSimpleVelocities(inputVel: float):
+    velocity = rescale(inputVel, 0, 255, -100, 100)
+    v1 = velocity
+    v2 = velocity
+    v3 = velocity
+    v4 = velocity
+
+    return v1, v2, v3, v4
 
 def limit(num, minimum=1, maximum=255):
   """Limits input 'num' between minimum and maximum values.
@@ -198,25 +246,25 @@ def main():
     vehicleWidth = 1.5
     vehicleLength = 2.0
 
-    # change to unique MAC address of bluetooth controller
-    controllerMAC = "E4:17:D8:9A:F7:7B" 
+    # # change to unique MAC address of bluetooth controller
+    # controllerMAC = "E4:17:D8:9A:F7:7B" 
 
-    # create an object for the bluetooth control
-    controller = bt.eightbitdo("/dev/input/event0")
+    # # create an object for the bluetooth control
+    # controller = bt.eightbitdo("/dev/input/event0")
 
-    # create an object for the serial port controlling the curtis units
-    try:
-        curtisData = serial.Serial("/dev/ttyUSB1", 115200, timeout=1)
-    except:
-        print("Curtis-Serial Bridge Failed to connect")
-        pass
+    # # create an object for the serial port controlling the curtis units
+    # try:
+    #     curtisData = serial.Serial("/dev/ttyUSB1", 115200, timeout=1)
+    # except:
+    #     print("Curtis-Serial Bridge Failed to connect")
+    #     pass
 
-    # create an object for the serial port controlling the curtis units
-    try:
-        actData = serial.Serial("/dev/ttyUSB0", 115200, timeout=1)
-    except:
-        print("Actuator Controller Failed to connect")
-        pass
+    # # create an object for the serial port controlling the curtis units
+    # try:
+    #     actData = serial.Serial("/dev/ttyUSB0", 115200, timeout=1)
+    # except:
+    #     print("Actuator Controller Failed to connect")
+    #     pass
 
     # So the direction in general can be reversed
     direction = False
@@ -263,26 +311,31 @@ def main():
             commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)
             commandAngle = rescale(newStates["right_x"], 0, 65535, 0, 255)
             # the angle needs to be in relatively real numbers
-            cmdVel = rescale(commandVel, 0, 255, -1, 1)
-            cmdAng = rescale(commandAngle, 0, 255, -1, 1)
+            # cmdVel = rescale(commandVel, 0, 255, -1, 1)
+            # cmdAng = rescale(commandAngle, 0, 255, -1, 1)
             #print(cmdAng)
-            v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth ,cmdVel, cmdAng)
-            print(v1,v2,v3,v4)
+            #v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth ,cmdVel, cmdAng)
+            v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
+            #print(v1,v2,v3,v4)
 
         else:
             commandVel = 0
             commandAngle = rescale(newStates["right_x"], 0, 65535,0, 255)
-            cmdAng = rescale(commandAngle, 0, 255, -1, 1)
-            v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth, cmdAng, 0)
+            #cmdAng = rescale(commandAngle, 0, 255, -1, 1)
+            #v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth, cmdAng, 0)
+            v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
 
         # Build a new message with the correct sequence for the curtis Arduino
         newCurtisMessage = generateCurtisMessage(estopState, enable, v1, v2, v3, v4)
+        print(newCurtisMessage)
         # Build new message for the actuators
         #print(enable, commandTool, commandAngle)
-        newActMessage = generateActMessage(enable, commandTool, commandAngle, estopState)
+        newActMessage = generateActMessage(estopState, enable, commandTool, commandAngle)
         # Send the new message to the actuators and curtis arduinos
-        send(newActMessage, 1, actData, curtisData)
-        send(newCurtisMessage, 0, actData, curtisData)
+        send(newActMessage, 1)
+        send(newCurtisMessage, 0)
+        # send(newActMessage, 1, actData, curtisData)
+        # send(newCurtisMessage, 0, actData, curtisData)
         # So that we don't keep spamming the Arduino....
         sleep(0.1)
 
