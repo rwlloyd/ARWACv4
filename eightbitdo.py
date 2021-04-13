@@ -108,7 +108,7 @@ class eightbitdo():
         ,self.states["trigger_r_1"],self.states["trigger_r_2"],self.states["button_select"]
         ,self.states["button_start"],self.states["button_left_xy"],self.states["button_right_xy"])
 
-#mycontroller = eightbitdo()
-#while (True):
+# mycontroller = eightbitdo()
+# while (True):
 #    mycontroller.readInputs()
 #    mycontroller.printStates()

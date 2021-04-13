@@ -3,6 +3,8 @@
 """
 Current status
 
+This is the version to test the socket communication from Doms work
+
 steering - working but shit.... everything's sloppy, actuator seems a bit weak. 
 tool - working but inverted - needs power connecting too
 wheels - fixed
@@ -16,7 +18,9 @@ import math
 from time import sleep
 import eightbitdo as bt
 import subprocess as sp
+from rassocketcom import CJetScketUDPSever
 
+m_CJetCom = CJetScketUDPSever()
 print("    4 Wheel Drive Remote Control for Serial-Curtis Bridge v1.3 and Generic Bluetooth Controller")
 print("    Four wheel drive electronic differential with ackermann steering via linear actuator and ancilliary lift")
 print("    Usage: Left or Right Trigger = Toggle Enable")
@@ -157,6 +161,28 @@ def send(message_in, conn):
         for i in range(0, messageLength):
             actData.write(message[i])
     #print(message)
+
+def socket_receive():
+     ############################################
+    # socket communication - dom
+    # Check to see if there is new input from the external, TX2
+    msg = {}
+    try:
+        msg = m_CJetCom.RasReceive()
+        if msg[0]['L']==1:
+            return -0.05
+        elif msg[0]['R']==1:
+            return 0.05
+
+        else:
+            return 0.0
+
+        print('Socket Recieved: ', msg[0]['L'])
+        # plt.pause(0.25)
+    except IOError:
+        pass
+    ############################################
+    ############################################
 
 def receive():
     """
@@ -309,7 +335,8 @@ def main():
         if isEnabled: 
             # Calculate the final inputs rescaling the absolute value to between -100 and 100
             commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)
-            commandAngle = rescale(newStates["right_x"], 0, 65535, 0, 255)
+            #commandAngle = rescale(newStates["right_x"], 0, 65535, 0, 255)
+            commandAngle = rescale(socket_receive(), -1, 1, 0, 255)
             # the angle needs to be in relatively real numbers
             # cmdVel = rescale(commandVel, 0, 255, -1, 1)
             # cmdAng = rescale(commandAngle, 0, 255, -1, 1)
@@ -320,7 +347,8 @@ def main():
 
         else:
             commandVel = 0
-            commandAngle = rescale(newStates["right_x"], 0, 65535,0, 255)
+            # commandAngle = rescale(newStates["right_x"], 0, 65535,0, 255)
+            commandAngle = rescale(socket_receive(), -1, 1, 0, 255)
             #cmdAng = rescale(commandAngle, 0, 255, -1, 1)
             #v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth, cmdAng, 0)
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)

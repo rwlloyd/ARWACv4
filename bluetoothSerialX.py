@@ -113,32 +113,6 @@ def generateActMessage(estopState:bool, enable: bool, height, angle):
     print("Sending: %s" % str(messageToSend))
     return messageToSend
 
-# def send(message_in, conn, actData, curtisData):
-#     """
-#     Function to send a message_in made of ints, convert them to bytes and then send them over a serial port
-#     message length, 10 bytes.
-#     This is the one modified by pete. probably better but confusing and threw errors
-#
-#     """
-#     if conn == 0:
-#         messageLength = 10
-#         message = []
-#         for i in range(messageLength):
-#             try:
-#                 message.append(message_in[i].to_bytes(1, 'little'))
-#             except:
-#                 print(i, [j for j in message_in])
-#         for i in range(messageLength):
-#             curtisData.write(message[i])
-#     elif conn == 1:
-#         messageLength = 4
-#         message = []
-#         for i in range(messageLength):
-#             message.append(message_in[i].to_bytes(1, 'little'))
-#         for i in range(messageLength):
-#             actData.write(message[i])
-#     #print(message)
-
 def send(message_in, conn):
     """
     Function to send a message_in made of ints, convert them to bytes and then send them over a serial port
@@ -179,21 +153,21 @@ def receive(message):
 
 def isEnabled():
     """ 
-    Function to handle enable and estop states. it was geeting annoying to look at.
+    Function to handle enable and estop states. it was getting annoying to look at.
     """
     # to reset after estop left and right bumper buttons - press together to cancel estop
-    if newStates["trigger_l_2"] == 1 and newStates["trigger_r_2"] == 0:
+    if newStates["trigger_l_1"] == 1 and newStates["trigger_r_1"] == 1:
         estopState = False
 
     # left and right joystick buttons trigger estop
-    if newStates["button_left_xy"] == 1 or newStates["button_right_xy"] == 0:
-        estopState = True #this shouldnt reset. but it does
+    if newStates["button_left_xy"] == 1 or newStates["button_right_xy"] == 1:
+        estopState = True 
     
     if estopState == True:
         enable = False #ok
     print(newStates["trigger_l_1"])
     # dead mans switch left or right trigger button
-    if newStates["trigger_l_1"] == 1 or newStates["trigger_r_1"] == 1:
+    if newStates["trigger_l_2"] >= 1 or newStates["trigger_r_2"] >= 1:
         if estopState == False:
             enable = True
     else:
@@ -299,7 +273,7 @@ def main():
             newStates = controller.readInputs()
         except IOError:
             pass
-
+        
         if newStates["dpad_y"] == -1:
             toolPos += 10
         elif newStates["dpad_y"] == 1:
@@ -312,11 +286,7 @@ def main():
             # Calculate the final inputs rescaling the absolute value to between -100 and 100
             commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)
             commandAngle = rescale(newStates["right_x"], 0, 65535, 0, 255)
-            # the angle needs to be in relatively real numbers
-            # cmdVel = rescale(commandVel, 0, 255, -1, 1)
-            # cmdAng = rescale(commandAngle, 0, 255, -1, 1)
-            #print(cmdAng)
-            #v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth ,cmdVel, cmdAng)
+            ###### THIS IS THE STUPID KINEMATIC MODEL ########
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
             #print(v1,v2,v3,v4)
 
