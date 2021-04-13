@@ -117,6 +117,8 @@ def generateActMessage(estopState:bool, enable: bool, height, angle):
 #     """
 #     Function to send a message_in made of ints, convert them to bytes and then send them over a serial port
 #     message length, 10 bytes.
+#     This is the one modified by pete. probably better but confusing and threw errors
+#
 #     """
 #     if conn == 0:
 #         messageLength = 10
@@ -158,7 +160,7 @@ def send(message_in, conn):
             actData.write(message[i])
     #print(message)
 
-def receive():
+def receive(message):
     """
     Function to read whatever is presented to the serial port and print it to the console.
     Note: For future use: Currently not used in this code.
