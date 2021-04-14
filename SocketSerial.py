@@ -168,16 +168,25 @@ def socket_receive():
     # Check to see if there is new input from the external, TX2
     msg = {}
     try:
+
+        msg = m_CJetCom.RasReceive_data()       
+        
+        print('Recieved data: ', msg)
+        return msg        
+        
+
+        """
         msg = m_CJetCom.RasReceive()
         if msg[0]['L']==1:
-            return -0.05
+            return msg[0]['L']
         elif msg[0]['R']==1:
-            return 0.05
+            return msg[0]['L']
 
         else:
-            return 0.0
+            return msg[0]['L']        
 
-        print('Socket Recieved: ', msg[0]['L'])
+        print('Recieved data: ', msg[0]['L'])
+        """
         # plt.pause(0.25)
     except IOError:
         pass
@@ -336,7 +345,7 @@ def main():
             # Calculate the final inputs rescaling the absolute value to between -100 and 100
             commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)
             #commandAngle = rescale(newStates["right_x"], 0, 65535, 0, 255)
-            commandAngle = rescale(socket_receive(), -1, 1, 0, 255)
+            commandAngle = rescale(float(socket_receive()), -1, 1, 65, 190) # JC 14/04/21 65 to 190 safe wheel angles
             # the angle needs to be in relatively real numbers
             # cmdVel = rescale(commandVel, 0, 255, -1, 1)
             # cmdAng = rescale(commandAngle, 0, 255, -1, 1)
@@ -348,7 +357,7 @@ def main():
         else:
             commandVel = 0
             # commandAngle = rescale(newStates["right_x"], 0, 65535,0, 255)
-            commandAngle = rescale(socket_receive(), -1, 1, 0, 255)
+            commandAngle = rescale(float(socket_receive()), -1, 1, 65, 190) # JC 14/04/21 65 to 190 safe wheel angles
             #cmdAng = rescale(commandAngle, 0, 255, -1, 1)
             #v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth, cmdAng, 0)
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)

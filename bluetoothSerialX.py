@@ -284,8 +284,8 @@ def main():
         # Check the enable state via the function
         if isEnabled: 
             # Calculate the final inputs rescaling the absolute value to between -100 and 100
-            commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)
-            commandAngle = rescale(newStates["right_x"], 0, 65535, 0, 255)
+            commandVel = rescale(newStates["left_y"], 65535, 0, 65, 190) # JC 14/04/21 65 to 190 safe wheel angles
+            commandAngle = rescale(newStates["right_x"], 0, 65535, 65, 190) # JC 14/04/21 65 to 190 safe wheel angles
             ###### THIS IS THE STUPID KINEMATIC MODEL ########
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
             #print(v1,v2,v3,v4)
