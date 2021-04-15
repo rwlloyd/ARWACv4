@@ -1,9 +1,5 @@
 from evdev import InputDevice, categorize, ecodes
-"""
-class to report all the button presses from an 8BitDo SN30 Pro+ bluetooth controller
 
-returns a dictionary of state via the readInputs() method
-"""
 #evdev reference https://python-evdev.readthedocs.io/en/latest/apidoc.html
 class eightbitdo():
     def __init__(self, path):
@@ -59,7 +55,9 @@ class eightbitdo():
         events = self.controller.read()
         try: 
             for event in events:
-                # Analog Sticks
+                # if event.type == ecodes.EV_ABS:
+                #     #print(event.code)
+                    # Analog Sticks
                 if event.code == self.left_x and event.type == 3:
                     self.states["left_x"] = event.value
                 elif event.code == self.left_y and event.type == 3:
@@ -73,6 +71,8 @@ class eightbitdo():
                     self.states["dpad_x"] = event.value
                 elif event.code == self.dpad_y and event.type == 3:
                     self.states["dpad_y"] = event.value
+                # #elif event.type == ecodes.EV_KEY:
+                # elif event.type == 1:
                 #     # Buttons
                 elif event.code == self.a_btn:
                     self.states["button_a"] = event.value
