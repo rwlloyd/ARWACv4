@@ -222,43 +222,24 @@ def main():
     vehicleWidth = 1.5
     vehicleLength = 2.0
 
-    # # change to unique MAC address of bluetooth controller
-    # controllerMAC = "E4:17:D8:9A:F7:7B" 
-
-    # # create an object for the bluetooth control
-    # controller = bt.eightbitdo("/dev/input/event0")
-
-    # # create an object for the serial port controlling the curtis units
-    # try:
-    #     curtisData = serial.Serial("/dev/ttyUSB1", 115200, timeout=1)
-    # except:
-    #     print("Curtis-Serial Bridge Failed to connect")
-    #     pass
-
-    # # create an object for the serial port controlling the curtis units
-    # try:
-    #     actData = serial.Serial("/dev/ttyUSB0", 115200, timeout=1)
-    # except:
-    #     print("Actuator Controller Failed to connect")
-    #     pass
-
-    # So the direction in general can be reversed
-    direction = False
+    # So the global direction of the vehicle can be reversed
+    direction = False               ###### THIS IS OLD. Check it does something
 
     # Initialise  values for enable and estop
     estopState = False
     enable = False
     left_y = 32768
-    right_x = 32768
-    toolPos = 128
-
-    curtisMessage = []  # Seems to be necessary to have a placeholder for the message here
+    right_x = 32768                 # Steering input centrepoint
+    toolPos = 200                   # Default tool position. should be raised position
+    toolStep = 10                   # Size of steps between positions
+    # Seems to be necessary to have a placeholder for the message here
+    curtisMessage = []  
     actMessage = []
     last_message = []
 
     # Main Loop
     while True:
-        stdoutdata = sp.getoutput("hcitool con") # hcitool check status of bluetooth devices
+        stdoutdata = sp.getoutput("hcitool con")                                            # hcitool check status of bluetooth devices
 
         # check bluetooth controller is connected if not then estop
         if controllerMAC not in stdoutdata.split():
@@ -268,24 +249,25 @@ def main():
         else:
             enable = True
 
-        # Check to see if there is new input from the controller
+        # Check to see if there is new input from the controller. Most of the time there isn't, so handle the error
         try:
             newStates = controller.readInputs()
         except IOError:
             pass
         
-        if newStates["dpad_y"] == -1:
-            toolPos += 10
-        elif newStates["dpad_y"] == 1:
-            toolPos -= 10
-        # Rescal the tool position. 100 is full up, 0 is full down. #'###CHECK THIS    
-        commandTool = rescale(toolPos, 255, 0, 100, 0)
+        # Handle the input for the raising and lowering of the tool. Don't let the tool go to high or low (0-255)
+        if newStates["dpad_y"] != 0:
+            if toolPos < toolStep or toolPos > 255 - toolStep:
+                print("Tool it too close to its limits")
+            else:
+                toolPos = -1 * toolStep * newStates["dpad_y"]        
+        commandTool = rescale(toolPos, 255, 0, 100, 0)                                      # Rescale the tool position. 100 is full up, 0 is full down. 
         
         # Check the enable state via the function
         if isEnabled: 
             # Calculate the final inputs rescaling the absolute value to between -100 and 100
-            commandVel = rescale(newStates["left_y"], 65535, 0, 65, 190) # JC 14/04/21 65 to 190 safe wheel angles
-            commandAngle = rescale(newStates["right_x"], 0, 65535, 65, 190) # JC 14/04/21 65 to 190 safe wheel angles
+            commandVel = rescale(newStates["left_y"], 65535, 0, 65, 190)                    # JC 14/04/21 65 to 190 safe wheel angles
+            commandAngle = rescale(newStates["right_x"], 0, 65535, 65, 190)                 # JC 14/04/21 65 to 190 safe wheel angles
             ###### THIS IS THE STUPID KINEMATIC MODEL ########
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
             #print(v1,v2,v3,v4)
@@ -296,20 +278,15 @@ def main():
             #cmdAng = rescale(commandAngle, 0, 255, -1, 1)
             #v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth, cmdAng, 0)
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
-
-        # Build a new message with the correct sequence for the curtis Arduino
-        newCurtisMessage = generateCurtisMessage(estopState, enable, v1, v2, v3, v4)
+   
+        newCurtisMessage = generateCurtisMessage(estopState, enable, v1, v2, v3, v4)        # Build a new message with the correct sequence for the curtis Arduino
         print(newCurtisMessage)
-        # Build new message for the actuators
         #print(enable, commandTool, commandAngle)
-        newActMessage = generateActMessage(estopState, enable, commandTool, commandAngle)
-        # Send the new message to the actuators and curtis arduinos
-        send(newActMessage, 1)
+        newActMessage = generateActMessage(estopState, enable, commandTool, commandAngle)   # Build new message for the actuators    
+        send(newActMessage, 1)                                                              # Send the new message to the actuators and curtis arduinos
         send(newCurtisMessage, 0)
-        # send(newActMessage, 1, actData, curtisData)
-        # send(newCurtisMessage, 0, actData, curtisData)
-        # So that we don't keep spamming the Arduino....
-        sleep(0.1)
+        
+        sleep(0.1)                                                                          # So that we don't keep spamming the Arduino....
 
 
 if __name__ == "__main__":
