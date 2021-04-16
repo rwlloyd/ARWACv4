@@ -255,7 +255,7 @@ def main():
         except IOError:
             pass
         
-        # Handle the input for the raising and lowering of the tool. Don't let the tool go to high or low (0-255)
+        # Handle the input for the raising and lowering of the tool. Don't let the tool go too high or low (0-255)
         if newStates["dpad_y"] != 0:
             if toolPos < toolStep or toolPos > 255 - toolStep:
                 print("Tool it too close to its limits")
@@ -266,7 +266,7 @@ def main():
         # Check the enable state via the function
         if isEnabled: 
             # Calculate the final inputs rescaling the absolute value to between -100 and 100
-            commandVel = rescale(newStates["left_y"], 65535, 0, 65, 190)                    # JC 14/04/21 65 to 190 safe wheel angles
+            commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)                   
             commandAngle = rescale(newStates["right_x"], 0, 65535, 65, 190)                 # JC 14/04/21 65 to 190 safe wheel angles
             ###### THIS IS THE STUPID KINEMATIC MODEL ########
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
@@ -274,7 +274,7 @@ def main():
 
         else:
             commandVel = 0
-            commandAngle = rescale(newStates["right_x"], 0, 65535,0, 255)
+            commandAngle = rescale(newStates["right_x"], 0, 65535,65, 2190)
             #cmdAng = rescale(commandAngle, 0, 255, -1, 1)
             #v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth, cmdAng, 0)
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)

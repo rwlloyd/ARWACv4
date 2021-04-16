@@ -2,7 +2,7 @@ from evdev import InputDevice, categorize, ecodes
 """
 class to report all the button presses from an 8BitDo SN30 Pro+ bluetooth controller
 
-returns a dictionary of state via the readInputs() method
+returns a dictionary of state via the readInputs() method 
 """
 #evdev reference https://python-evdev.readthedocs.io/en/latest/apidoc.html
 class eightbitdo():
