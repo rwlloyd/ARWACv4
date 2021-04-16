@@ -13,7 +13,7 @@ print("    4 Wheel Drive Remote Control for Serial-Curtis Bridge v1.3 and Generi
 controllerMAC = "E4:17:D8:9A:F7:7B" 
 
 # create an object for the bluetooth control
-controller = bt.eightbitdo("/dev/input/event2")
+controller = bt.eightbitdo("/dev/input/event0")
 
 def main():
 

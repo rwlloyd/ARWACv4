@@ -1,6 +1,6 @@
 #import evdev
 from evdev import InputDevice, categorize, ecodes
-controller = InputDevice('/dev/input/event2')
+controller = InputDevice('/dev/input/event0')
 
 print(controller)
 print(controller.capabilities(verbose=True))

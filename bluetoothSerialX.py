@@ -75,8 +75,8 @@ def generateCurtisMessage(estopState: bool, enable: bool, v1 , v2, v3, v4):
 
     # Check to see if we're allowed to move. estop and enable
     if estopState or not enable:
-        for i in vels:
-            vels[i] = 0
+        for i in range(len(vels)):
+            vels[i] = int(0)
 
     # # Build the message. converting everything into positive integers
     # # Message is 10 bits [estopState, enable, motor 0 direction, motor 0 velocity, motor 1 direction, motor 1 velocity, motor 2 direction, motor 2 velocity, motor 3 direction, motor 3 velocity]
@@ -151,7 +151,7 @@ def receive(message):
         print("Failed to receive serial message")
         pass
 
-def isEnabled():
+def isEnabled(newStates, enable, estopState):
     """ 
     Function to handle enable and estop states. it was getting annoying to look at.
     """
@@ -254,6 +254,9 @@ def main():
             newStates = controller.readInputs()
         except IOError:
             pass
+
+        #Check Enables and ESTOP
+        enable = isEnabled(newStates, enable, estopState)
         
         # Handle the input for the raising and lowering of the tool. Don't let the tool go too high or low (0-255)
         if newStates["dpad_y"] == -1 and toolPos < 255 - toolStep:
