@@ -256,11 +256,15 @@ def main():
             pass
         
         # Handle the input for the raising and lowering of the tool. Don't let the tool go too high or low (0-255)
-        if newStates["dpad_y"] != 0:
-            if toolPos < toolStep or toolPos > 255 - toolStep:
-                print("Tool it too close to its limits")
-            else:
-                toolPos = -1 * toolStep * newStates["dpad_y"]        
+        if newStates["dpad_y"] == -1 and toolPos < 255 - toolStep:
+            # move up
+            toolPos += toolStep 
+        elif newStates["dpad_y"] == 1 and toolPos > toolStep:
+            #move down
+            toolPos += -1 * toolStep 
+        else:
+            print("Tool it too close to its limits")
+                       
         commandTool = rescale(toolPos, 255, 0, 100, 0)                                      # Rescale the tool position. 100 is full up, 0 is full down. 
         
         # Check the enable state via the function
