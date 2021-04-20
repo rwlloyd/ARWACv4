@@ -175,32 +175,6 @@ def isEnabled(newStates, enable, estopState):
 
     return enable
 
-# def calculateVelocities(vehicleLength: float, vehicleWidth: float, velocity, angle):
-#     # Appl Sci 2017, 7, 74
-#     if angle > 0: #turn Left
-#         R = vehicleLength/math.tan(angle)
-#         v1 = velocity*(1-(vehicleWidth/R))
-#         v2 = velocity*(1+(vehicleWidth/R))
-#         v3 = velocity*((R-(vehicleWidth/2)/R))
-#         v4 = velocity*((R+(vehicleWidth/2)/R))
-#     elif angle < 0: #turn Right
-#         R = vehicleLength/math.tan(angle)
-#         v1 = velocity*(1+(vehicleWidth/R))
-#         v2 = velocity*(1-(vehicleWidth/R))
-#         v3 = velocity*((R+(vehicleWidth/2)/R))
-#         v4 = velocity*((R-(vehicleWidth/2)/R))
-#     elif angle < 0.001 and angle > -0.001:
-#         angle = 0
-#         v1 = velocity
-#         v2 = velocity
-#         v3 = velocity
-#         v4 = velocity
-
-#     if sum([v1, v2, v3, v4]) < 4.00:
-#         return v1, v2, v3, v4
-#     else:
-#         raise ValueError(f'Velocity value incorrect: {v1}, {v2}, {v3}, {v4} Angle {angle} Sum: {sum([v1, v2, v3, v4])}')
-
 def calculateSimpleVelocities(inputVel: float):
     velocity = rescale(inputVel, 0, 255, -100, 100)
     v1 = velocity
@@ -269,20 +243,19 @@ def main():
             print("Tool it too close to its limits")
                        
         commandTool = rescale(toolPos, 255, 0, 100, 0)                                      # Rescale the tool position. 100 is full up, 0 is full down. 
-        
+        commandAngle = rescale(newStates["right_x"], 0, 65535, 65, 190)                 # JC 14/04/21 65 to 190 safe wheel angles
+
         # Check the enable state via the function
         if isEnabled: 
             # Calculate the final inputs rescaling the absolute value to between -100 and 100
             commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)                   
-            commandAngle = rescale(newStates["right_x"], 0, 65535, 65, 190)                 # JC 14/04/21 65 to 190 safe wheel angles
+            
             ###### THIS IS THE STUPID KINEMATIC MODEL ########
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
             #print(v1,v2,v3,v4)
 
         else:
             commandVel = 0
-            commandAngle = rescale(newStates["right_x"], 0, 65535,65, 2190)
-            #cmdAng = rescale(commandAngle, 0, 255, -1, 1)
             #v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth, cmdAng, 0)
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
    
