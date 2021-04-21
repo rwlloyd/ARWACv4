@@ -75,8 +75,8 @@ def generateCurtisMessage(estopState: bool, enable: bool, v1 , v2, v3, v4):
 
     # Check to see if we're allowed to move. estop and enable
     if estopState or not enable:
-        for i in vels:
-            vels[i] = 0
+        for i in range(len(vels)):
+            vels[i] = int(0)
 
     # # Build the message. converting everything into positive integers
     # # Message is 10 bits [estopState, enable, motor 0 direction, motor 0 velocity, motor 1 direction, motor 1 velocity, motor 2 direction, motor 2 velocity, motor 3 direction, motor 3 velocity]
@@ -151,7 +151,7 @@ def receive(message):
         print("Failed to receive serial message")
         pass
 
-def isEnabled():
+def isEnabled(newStates, enable, estopState):
     """ 
     Function to handle enable and estop states. it was getting annoying to look at.
     """
@@ -174,32 +174,6 @@ def isEnabled():
         enable = False
 
     return enable
-
-# def calculateVelocities(vehicleLength: float, vehicleWidth: float, velocity, angle):
-#     # Appl Sci 2017, 7, 74
-#     if angle > 0: #turn Left
-#         R = vehicleLength/math.tan(angle)
-#         v1 = velocity*(1-(vehicleWidth/R))
-#         v2 = velocity*(1+(vehicleWidth/R))
-#         v3 = velocity*((R-(vehicleWidth/2)/R))
-#         v4 = velocity*((R+(vehicleWidth/2)/R))
-#     elif angle < 0: #turn Right
-#         R = vehicleLength/math.tan(angle)
-#         v1 = velocity*(1+(vehicleWidth/R))
-#         v2 = velocity*(1-(vehicleWidth/R))
-#         v3 = velocity*((R+(vehicleWidth/2)/R))
-#         v4 = velocity*((R-(vehicleWidth/2)/R))
-#     elif angle < 0.001 and angle > -0.001:
-#         angle = 0
-#         v1 = velocity
-#         v2 = velocity
-#         v3 = velocity
-#         v4 = velocity
-
-#     if sum([v1, v2, v3, v4]) < 4.00:
-#         return v1, v2, v3, v4
-#     else:
-#         raise ValueError(f'Velocity value incorrect: {v1}, {v2}, {v3}, {v4} Angle {angle} Sum: {sum([v1, v2, v3, v4])}')
 
 def calculateSimpleVelocities(inputVel: float):
     velocity = rescale(inputVel, 0, 255, -100, 100)
@@ -254,28 +228,34 @@ def main():
             newStates = controller.readInputs()
         except IOError:
             pass
+
+        #Check Enables and ESTOP
+        enable = isEnabled(newStates, enable, estopState)
         
-        # Handle the input for the raising and lowering of the tool. Don't let the tool go to high or low (0-255)
-        if newStates["dpad_y"] != 0:
-            if toolPos < toolStep or toolPos > 255 - toolStep:
-                print("Tool it too close to its limits")
-            else:
-                toolPos = -1 * toolStep * newStates["dpad_y"]        
+        # Handle the input for the raising and lowering of the tool. Don't let the tool go too high or low (0-255)
+        if newStates["dpad_y"] == -1 and toolPos < 255 - toolStep:
+            # move up
+            toolPos += toolStep 
+        elif newStates["dpad_y"] == 1 and toolPos > toolStep:
+            #move down
+            toolPos += -1 * toolStep 
+        else:
+            print("Tool it too close to its limits")
+                       
         commandTool = rescale(toolPos, 255, 0, 100, 0)                                      # Rescale the tool position. 100 is full up, 0 is full down. 
-        
+        commandAngle = rescale(newStates["right_x"], 0, 65535, 65, 190)                 # JC 14/04/21 65 to 190 safe wheel angles
+
         # Check the enable state via the function
         if isEnabled: 
             # Calculate the final inputs rescaling the absolute value to between -100 and 100
-            commandVel = rescale(newStates["left_y"], 65535, 0, 65, 190)                    # JC 14/04/21 65 to 190 safe wheel angles
-            commandAngle = rescale(newStates["right_x"], 0, 65535, 65, 190)                 # JC 14/04/21 65 to 190 safe wheel angles
+            commandVel = rescale(newStates["left_y"], 65535, 0, 0, 255)                   
+            
             ###### THIS IS THE STUPID KINEMATIC MODEL ########
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
             #print(v1,v2,v3,v4)
 
         else:
             commandVel = 0
-            commandAngle = rescale(newStates["right_x"], 0, 65535,0, 255)
-            #cmdAng = rescale(commandAngle, 0, 255, -1, 1)
             #v1, v2, v3, v4 = calculateVelocities(vehicleLength, vehicleWidth, cmdAng, 0)
             v1, v2, v3, v4 = calculateSimpleVelocities(commandVel)
    

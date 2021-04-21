@@ -74,29 +74,29 @@ class eightbitdo():
                 # #elif event.type == ecodes.EV_KEY:
                 # elif event.type == 1:
                 #     # Buttons
-                elif event.code == self.a_btn:
+                elif event.code == self.a_btn and event.type == 1:
                     self.states["button_a"] = event.value
-                elif event.code == self.b_btn:
+                elif event.code == self.b_btn and event.type == 1:
                     self.states["button_b"] = event.value
-                elif event.code == self.x_btn:
+                elif event.code == self.x_btn and event.type == 1:
                     self.states["button_x"] = event.value
-                elif event.code == self.y_btn:
+                elif event.code == self.y_btn and event.type == 1:
                     self.states["button_y"] = event.value
-                elif event.code == self.left_tr_1:
+                elif event.code == self.left_tr_1 and event.type == 1:
                     self.states["trigger_l_1"] = event.value
-                elif event.code == self.left_tr_2:
+                elif event.code == self.left_tr_2  and event.type == 3:
                     self.states["trigger_l_2"] = event.value
-                elif event.code == self.right_tr_1:
+                elif event.code == self.right_tr_1  and event.type == 1:
                     self.states["trigger_r_1"] = event.value
-                elif event.code == self.right_tr_2:
+                elif event.code == self.right_tr_2  and event.type == 3:
                     self.states["trigger_r_2"] = event.value
-                elif event.code == self.sel_btn:
+                elif event.code == self.sel_btn  and event.type == 1:
                     self.states["button_select"] = event.value
-                elif event.code == self.start_btn:
+                elif event.code == self.start_btn  and event.type == 1:
                     self.states["button_start"] = event.value
-                elif event.code == self.left_xy_btn:
+                elif event.code == self.left_xy_btn  and event.type == 1:
                     self.states["button_left_xy"] = event.value
-                elif event.code == self.right_xy_btn:
+                elif event.code == self.right_xy_btn  and event.type == 1:
                     self.states["button_right_xy"] = event.value
         except IOError:
             pass
