@@ -66,3 +66,7 @@ sudo reboot
 sudo systemctl status remoteControl.service
 - to tail the cmd line output of the service...
 journalctl -f -u remoteControl.service 
+
+
+GPS parsing library 
+pip3 install pynmea2

@@ -18,9 +18,14 @@ import math
 from time import sleep
 import eightbitdo as bt
 import subprocess as sp
+import socket
+import pynmea2 # parses nmea data to readable format ## https://github.com/Knio/pynmea2
 from rassocketcom import CJetScketUDPSever
 
 m_CJetCom = CJetScketUDPSever()
+
+
+
 print("    4 Wheel Drive Remote Control for Serial-Curtis Bridge v1.3 and Generic Bluetooth Controller")
 print("    Four wheel drive electronic differential with ackermann steering via linear actuator and ancilliary lift")
 print("    Usage: Left or Right Trigger = Toggle Enable")
@@ -50,7 +55,27 @@ except:
     print("Actuator Controller Failed to connect")
     pass
 
+# Set up the GPS communication
+gps_ip = "192.168.0.28" # Device IP
+gps_port = 28000 # IP port
+PACKET_SIZE=1024 # how many characters to read at a time
+sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+try:
+    sock.connect((gps_ip,gps_port)) #connect to the device
+except:
+    print("Problem with the GPS")
+
+# check the gps
+print("gps_ip: " + str(gps_ip) + " port: " + str(gps_port) + " packet size: " + str(PACKET_SIZE))
+
 ## Functions -----------------------------------------------------------------------
+
+def pollGPS(socket, PACKET_SIZE)
+    while True: # continuously read and handle data
+        data = str(socket.recv(PACKET_SIZE))[2:][:-5 ] ## [2:][:-5 ] removes excess characters from data string
+        #print(data) # prints raw data stream
+        message = pynmea2.parse(str(data))
+        print("Timestamp UTC: " + str(message.timestamp) + " Latitude: " + str(message.latitude) + " Longitude: " + str(message.longitude)) 
 
 def rescale(val, in_min, in_max, out_min, out_max):
     """
@@ -192,6 +217,21 @@ def socket_receive():
         pass
     ############################################
     ############################################
+
+def gps_receive():
+     ############################################
+    # socket communication - dom
+    # Check to see if there is new input from the external, TX2
+    msg = {}
+    try:
+
+        msg = m_CJetCom.RasReceive_data()       
+        
+        print('Recieved data: ', msg)
+        return msg        
+        
+    except IOError:
+        pass
 
 def receive():
     """
