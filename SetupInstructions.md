@@ -67,6 +67,19 @@ sudo systemctl status remoteControl.service
 - to tail the cmd line output of the service...
 journalctl -f -u remoteControl.service 
 
+---------------------------------------------------------
+
+GPS Setup
+Connect GPS with ethernet cable to router. 	
+Get IP address of GPS unit. 	
+May need to re-setup data stream within GPS: 		
+	Use web browser go to GPS IP address. 		
+	Click on NMEA / SBF out. 	
+	If NMEA/SBF Output Streams is empty set up new NMEA stream. 
+	New NMEA stream with port 28000. 
+In python code change GPS IP address.
 
 GPS parsing library 
 pip3 install pynmea2
+
+---------------------------------------------------------
