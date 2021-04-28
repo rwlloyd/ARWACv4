@@ -69,7 +69,7 @@ journalctl -f -u remoteControl.service
 
 ---------------------------------------------------------
 
-GPS Setup
+GPS Unit Setup
 Connect GPS with ethernet cable to router. 	
 Get IP address of GPS unit. 	
 May need to re-setup data stream within GPS: 		
