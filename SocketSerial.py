@@ -71,11 +71,19 @@ print("gps_ip: " + str(gps_ip) + " port: " + str(gps_port) + " packet size: " + 
 ## Functions -----------------------------------------------------------------------
 
 def pollGPS(gps_socket, gps_packet_size)
-    while True: # continuously read and handle data
-        data = str(socket.recv(PACKET_SIZE))[2:][:-5 ] ## [2:][:-5 ] removes excess characters from data string
-        #print(data) # prints raw data stream
-        message = pynmea2.parse(str(data)) # parses raw data to readable text
-        print("Timestamp UTC: " + str(message.timestamp) + " Latitude: " + str(message.latitude) + " Longitude: " + str(message.longitude)) 
+    """
+    Connects to GPS via network and gets GPS data in NMEA format.
+    Parses  NMEA to strings prints and save to file current GPS data.
+    """
+    data = str(socket.recv(PACKET_SIZE))[2:][:-5 ] ## [2:][:-5 ] removes excess characters from data string
+    #print(data) # prints raw data stream
+    message = pynmea2.parse(str(data)) # parses raw data to readable text
+    print("Timestamp UTC: " + str(message.timestamp) + " Latitude: " + str(message.latitude) + " Longitude: " + str(message.longitude)) 
+
+    # save gps output to txt file
+    gpsLogFile = open('gps_log.txt', 'a')  
+    gpsLogFile.write("Timestamp UTC: " + str(message.timestamp) + " Latitude: " + str(message.latitude) + " Longitude: " + str(message.longitude))
+    gpsLogFile.close()
 
 def rescale(val, in_min, in_max, out_min, out_max):
     """
