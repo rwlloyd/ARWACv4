@@ -63,7 +63,7 @@ gps_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 try:
     gps_socket.connect((gps_ip, gps_port)) #connect to the device
 except:
-    print("Problem with the GPS")
+    print("Cannot connect to GPS")
 
 # check the gps
 print("gps_ip: " + str(gps_ip) + " port: " + str(gps_port) + " packet size: " + str(PACKET_SIZE))
