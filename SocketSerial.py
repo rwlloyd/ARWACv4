@@ -56,17 +56,18 @@ except:
     pass
 
 # Set up the GPS communication
-gps_ip = "192.168.0.28" # Device IP
+gps_ip = "asterx4-3057583" # Device IP
 gps_port = 28000 # IP port
 gps_packet_size = 1024 # how many characters to read at a time
 gps_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 try:
     gps_socket.connect((gps_ip, gps_port)) #connect to the device
 except:
     print("Cannot connect to GPS")
 
 # check the gps
-print("gps_ip: " + str(gps_ip) + " port: " + str(gps_port) + " packet size: " + str(PACKET_SIZE))
+print("gps_ip: " + str(gps_ip) + " port: " + str(gps_port) + " packet size: " + str(gps_packet_size))
 
 ## Functions -----------------------------------------------------------------------
 
@@ -380,6 +381,8 @@ def main():
             newStates = controller.readInputs()
         except IOError:
             pass
+
+        #pollGPS(gps_socket, gps_packet_size)
 
         if newStates["dpad_y"] == -1:
             toolPos += 10
