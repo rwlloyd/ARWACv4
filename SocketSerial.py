@@ -58,23 +58,33 @@ except:
 # Set up the GPS communication
 gps_ip = "asterx4-3057583" # Device IP
 gps_port = 28000 # IP port
-gps_packet_size=1024 # how many characters to read at a time
-gps_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+gps_packet_size = 1024 # how many characters to read at a time
+gps_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
 try:
     gps_socket.connect((gps_ip, gps_port)) #connect to the device
 except:
-    print("Problem with the GPS")
+    print("Cannot connect to GPS")
 
 # check the gps
 print("gps_ip: " + str(gps_ip) + " port: " + str(gps_port) + " packet size: " + str(gps_packet_size))
 
 ## Functions -----------------------------------------------------------------------
 
-def pollGPS(gps_socket, gps_packet_size):
-    data = str(gps_socket.recv(gps_packet_size))[2:][:-5 ] ## [2:][:-5 ] removes excess characters from data string
+def pollGPS(gps_socket, gps_packet_size)
+    """
+    Connects to GPS via network and gets GPS data in NMEA format.
+    Parses  NMEA to strings prints and save to file current GPS data.
+    """
+    data = str(socket.recv(PACKET_SIZE))[2:][:-5 ] ## [2:][:-5 ] removes excess characters from data string
     #print(data) # prints raw data stream
     message = pynmea2.parse(str(data)) # parses raw data to readable text
     print("Timestamp UTC: " + str(message.timestamp) + " Latitude: " + str(message.latitude) + " Longitude: " + str(message.longitude)) 
+
+    # save gps output to txt file
+    gpsLogFile = open('gps_log.txt', 'a')  
+    gpsLogFile.write("Timestamp UTC: " + str(message.timestamp) + " Latitude: " + str(message.latitude) + " Longitude: " + str(message.longitude))
+    gpsLogFile.close()
 
 def rescale(val, in_min, in_max, out_min, out_max):
     """
