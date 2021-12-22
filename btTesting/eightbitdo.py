@@ -103,11 +103,24 @@ class eightbitdo():
         return self.states
 
     def printStates(self):
-        print(self.states["left_x"], self.states["left_y"],self.states["right_x"],self.states["right_y"]
-        ,self.states["dpad_x"],self.states["dpad_y"],self.states["button_a"],self.states["button_b"]
-        ,self.states["button_x"],self.states["button_y"],self.states["trigger_l_1"],self.states["trigger_l_2"]
-        ,self.states["trigger_r_1"],self.states["trigger_r_2"],self.states["button_select"]
-        ,self.states["button_start"],self.states["button_left_xy"],self.states["button_right_xy"])
+        print(self.states["left_x"], 
+        self.states["left_y"],
+        self.states["right_x"],
+        self.states["right_y"]
+        ,self.states["dpad_x"],
+        self.states["dpad_y"],
+        self.states["button_a"],
+        self.states["button_b"],
+        self.states["button_x"],
+        self.states["button_y"],
+        self.states["trigger_l_1"],
+        self.states["trigger_l_2"],
+        self.states["trigger_r_1"],
+        self.states["trigger_r_2"],
+        self.states["button_select"],
+        self.states["button_start"],
+        self.states["button_left_xy"],
+        self.states["button_right_xy"])
 
 # mycontroller = eightbitdo()
 # while (True):
