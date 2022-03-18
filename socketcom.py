@@ -14,7 +14,7 @@ class CRaspiScketUDPClient(object):
     def __init__(self, sock=None):
         # self.host ="10.101.12.90" "192.168.1.10" # set to IP address of target computer : TX2
         # self.host = "10.101.8.30" #"192.168.1.12" # set to IP address of target computer : TX1
-        self.host ="10.101.12.90"
+        self.host ="10.101.8.66"
         self.port = 13000 
         self.addr = (self.host, self.port) 
         self.UDPSock = socket(AF_INET, SOCK_DGRAM) 
